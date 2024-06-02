@@ -46,7 +46,7 @@ class TfliteFlutterHelperPlugin : FlutterPlugin,
 		ActivityAware {
 
 
-	private val LOG_TAG = "TfLiteFlutterHelperPlugin"
+	private val LOG_TAG = "TfLiteFlutterHelpPlugin"
 	private val AUDIO_RECORD_PERMISSION_CODE = 14887
 	private val DEFAULT_SAMPLE_RATE = 16000
 	private val DEFAULT_BUFFER_SIZE = 8192
@@ -264,9 +264,20 @@ class TfliteFlutterHelperPlugin : FlutterPlugin,
 				recorder.read(audioData!!, 0, mRecorderBufferSize)
 			}
 
-			override fun onPeriodicNotification(recorder: AudioRecord) {
+			override fun onPeriodicNotification(recorder: AudioRecord?) {
+				if (recorder == null) {
+					Log.d(LOG_TAG, "onPeriodicNotification, recorder == null")
+					return
+				}
 				val data = audioData!!
+				
+				// https://developer.android.com/reference/android/media/AudioRecord#read(byte[],%20int,%20int)
 				val shortOut = recorder.read(data, 0, mPeriodFrames)
+				if (shortOut < 0) {
+					Log.d(LOG_TAG, "onPeriodicNotification, shortOut = $shortOut")
+					return
+				}
+
 				// https://flutter.io/platform-channels/#codec
 				// convert short to int because of platform-channel's limitation
 				val byteBuffer = ByteBuffer.allocate(shortOut * 2)
